@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>JS & Node.js MasterQuiz | Premium Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 0% 20%, #0a0e1a, #010101);
+            background-attachment: fixed;
+            font-family: 'Inter', 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* animated noise overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 30% 50%, rgba(255,255,245,0.02) 1px, transparent 1px);
+            background-size: 35px 35px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* main premium card */
+        .quiz-wrapper {
+            max-width: 950px;
+            width: 100%;
+            background: rgba(12, 18, 32, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 30px 55px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
+            overflow: hidden;
+            transition: all 0.3s;
+            z-index: 2;
+        }
+
+        /* header premium glow */
+        .quiz-header {
+            padding: 1.8rem 2rem 1rem 2rem;
+            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(30,40,70,0.2));
+            border-bottom: 1px solid rgba(255,215,150,0.2);
+        }
+
+        .title-badge {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            background: linear-gradient(125deg, #FFFFFF, #C2E0FF, #B388FF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .tech-icon {
+            font-size: 1.2rem;
+            background: rgba(100, 150, 255, 0.2);
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            border: 1px solid rgba(255,215,0,0.3);
+            backdrop-filter: blur(4px);
+        }
+
+        .stats-grid {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 2rem;
+            padding: 0.45rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 500;
+            color: #eef3ff;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-value {
+            font-weight: 800;
+            font-size: 1.35rem;
+            background: linear-gradient(145deg, #FFE6B0, #FFFFFF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .quiz-body {
+            padding: 2rem;
+        }
+
+        /* progress */
+        .progress-area {
+            margin-bottom: 1.8rem;
+        }
+
+        .progress-track {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 40px;
+            height: 7px;
+            overflow: hidden;
+        }
+
+        .progress-fill-dynamic {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #4A9EFF, #B877FF, #FF98E0);
+            border-radius: 40px;
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 6px #B877FF;
+        }
+
+        .q-counter {
+            text-align: right;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            color: #A6BBF0;
+            font-weight: 500;
+        }
+
+        .question-text {
+            font-size: 1.65rem;
+            font-weight: 600;
+            line-height: 1.4;
+            margin: 1rem 0 2rem 0;
+            color: #F3F7FF;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* options grid - modern */
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            margin-bottom: 2.2rem;
+        }
+
+        .opt-card {
+            background: rgba(25, 35, 55, 0.7);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,240,0.2);
+            border-radius: 1.8rem;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            font-weight: 500;
+            color: #EFF5FF;
+        }
+
+        .opt-card:hover:not(.disabled-opt) {
+            background: rgba(80, 120, 210, 0.6);
+            transform: translateX(8px) scale(1.01);
+            border-color: #FFD966;
+        }
+
+        .opt-marker {
+            width: 34px;
+            height: 34px;
+            background: rgba(255,255,245,0.12);
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .opt-card.correct-answer {
+            background: rgba(50, 190, 110, 0.75);
+            border-color: #B2FFCE;
+            box-shadow: 0 0 12px #2CD47A;
+        }
+
+        .opt-card.wrong-answer {
+            background: rgba(210, 60, 85, 0.75);
+            border-color: #FFB0B0;
+            text-decoration: line-through;
+        }
+
+        .disabled-opt {
+            cursor: default;
+            opacity: 0.75;
+        }
+
+        /* button panel */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.8rem 1.8rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            border: none;
+            background: rgba(20, 30, 55, 0.8);
+            backdrop-filter: blur(5px);
+            color: white;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(100deg, #3C7EFF, #8B5EFF);
+            box-shadow: 0 8px 18px rgba(60, 126, 255, 0.3);
+            border: none;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        .btn-danger {
+            background: rgba(190, 70, 90, 0.8);
+        }
+
+        .btn-danger:hover {
+            background: rgba(210, 80, 100, 0.95);
+            transform: scale(0.97);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* result card */
+        .result-container {
+            text-align: center;
+            padding: 1rem 0.5rem;
+        }
+
+        .result-score-ring {
+            width: 170px;
+            height: 170px;
+            margin: 1.8rem auto;
+            background: radial-gradient(circle at 30% 20%, #1E2745, #0A0F20);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255,200,100,0.6);
+            box-shadow: 0 20px 30px -10px black;
+        }
+
+        .score-big {
+            font-size: 3.8rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #FFF2BF, #E6BBFF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .verdict {
+            font-size: 1.25rem;
+            margin: 0.8rem 0;
+            font-weight: 500;
+            color: #CDE2FF;
+        }
+
+        hr {
+            margin: 1.2rem 0;
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 0.9rem;
+            color: #6A7DB0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        @media (max-width: 560px) {
+            .quiz-body {
+                padding: 1.3rem;
+            }
+            .question-text {
+                font-size: 1.25rem;
+            }
+            .btn {
+                padding: 0.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="quiz-wrapper" id="rootQuiz">
+    <div class="quiz-header">
+        <div class="title-badge">
+            <h1>⚡ JS & NODE.js DEEP DIVE</h1>
+            <div class="tech-icon">🚀 20 PRO QUESTIONS</div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item"><span>🏆 SCORE</span> <span class="stat-value" id="scoreValue">0</span></div>
+            <div class="stat-item"><span>📋 PROGRESS</span> <span class="stat-value" id="progressStat">0</span><span> / <span id="totalQ">20</span></span></div>
+        </div>
+    </div>
+    <div class="quiz-body" id="dynamicBody"></div>
+    <footer>🧠 20 handcrafted questions • JavaScript & Node.js • instant scoring</footer>
+</div>
+
+<script>
+    // ---------- 20 JAVASCRIPT & NODE.JS PREMIUM QUESTIONS ----------
+    const MASTER_QUIZ = [
+        { question: "Which of the following is NOT a JavaScript data type?", options: ["Undefined", "Symbol", "Float", "BigInt"], correct: 2 },
+        { question: "What does the 'this' keyword refer to in a regular function (non-arrow) in a browser?", options: ["Global Window object", "The function itself", "The parent scope", "Undefined"], correct: 0 },
+        { question: "Which method is used to add an element at the end of an array in JavaScript?", options: ["push()", "pop()", "unshift()", "concat()"], correct: 0 },
+        { question: "What does Node.js use as its default execution model?", options: ["Multi-threaded", "Single-threaded event loop", "Hybrid threading", "Worker pool only"], correct: 1 },
+        { question: "Which of the following is true about 'closure' in JS?", options: ["Inner function cannot access outer variables", "It causes memory leaks always", "Function retains access to outer scope even after outer function returns", "Only works with arrow functions"], correct: 2 },
+        { question: "What is the purpose of 'process.nextTick()' in Node.js?", options: ["Delays execution of a function for next iteration of event loop (microtask style)", "Creates a new process", "Sets a timer", "Exits the process"], correct: 0 },
+        { question: "Which built-in method converts JSON string to a JavaScript object?", options: ["JSON.parse()", "JSON.stringify()", "JSON.convert()", "JSON.objectify()"], correct: 0 },
+        { question: "What does the 'fs' module stand for in Node.js?", options: ["FileStream", "FileSystem", "FastSync", "FunctionStore"], correct: 1 },
+        { question: "Which symbol is used for template literals in JS?", options: ["Single quotes", "Double quotes", "Backticks (`)", "Curly braces"], correct: 2 },
+        { question: "In Node.js, which global variable stores command-line arguments?", options: ["process.argv", "arguments", "cmd.args", "process.args"], correct: 0 },
+        { question: "What will 'typeof null' return in JavaScript?", options: ["null", "undefined", "object", "number"], correct: 2 },
+        { question: "Which of these is a valid way to create a promise?", options: ["new Promise((resolve, reject) => {})", "Promise.new()", "new Promise(executor)", "Promise.create()"], correct: 0 },
+        { question: "What does the 'require' function do in Node.js?", options: ["Imports modules", "Exports modules", "Reads files", "Creates HTTP server"], correct: 0 },
+        { question: "Which array method executes a function on each element and returns a new array?", options: ["forEach()", "map()", "filter()", "reduce()"], correct: 1 },
+        { question: "What is the purpose of the 'EventEmitter' class in Node.js?", options: ["Handle and emit custom events", "Manage HTTP requests", "Read streams", "Encrypt data"], correct: 0 },
+        { question: "What is the output of 'console.log(0.1 + 0.2 === 0.3)' in JS?", options: ["true", "false", "undefined", "NaN"], correct: 1 },
+        { question: "Which HTTP method is considered idempotent in RESTful Node.js apps?", options: ["POST", "PUT", "PATCH", "DELETE (multiple times same effect)"], correct: 1 },
+        { question: "What is the default port for a Node.js Express server?", options: ["3000", "8080", "5000", "80"], correct: 0 },
+        { question: "Which statement correctly creates a class in ES6?", options: ["class MyClass {}", "function MyClass() {}", "object MyClass = {}", "new class MyClass"], correct: 0 },
+        { question: "What is the primary role of 'npm' in Node.js ecosystem?", options: ["Node Package Manager", "Node Process Manager", "Network Protocol Manager", "Non-blocking Process Manager"], correct: 0 }
+    ];
+
+    // ---------- APP STATE ----------
+    let quizQuestions = [];      // shuffled copy
+    let currentIndex = 0;
+    let userScore = 0;
+    let answersRecord = [];      // store selected option index per question (-1 = unanswered)
+    let quizFinished = false;
+    let answerLockedPerQuestion = false;   // avoid double answer on same question
+
+    // DOM elements
+    const dynamicBody = document.getElementById('dynamicBody');
+    const scoreValueSpan = document.getElementById('scoreValue');
+    const progressStatSpan = document.getElementById('progressStat');
+    const totalQSpan = document.getElementById('totalQ');
+
+    // Helper: shuffle array (Fisher-Yates)
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // Reset & start new game (full shuffle)
+    function initGame() {
+        quizQuestions = shuffleArray([...MASTER_QUIZ]);
+        currentIndex = 0;
+        userScore = 0;
+        answersRecord = new Array(quizQuestions.length).fill(-1);
+        quizFinished = false;
+        answerLockedPerQuestion = false;
+        updateStatsUI();
+        renderCurrentQuestion();
+    }
+
+    function updateStatsUI() {
+        scoreValueSpan.innerText = userScore;
+        if (!quizFinished) {
+            progressStatSpan.innerText = currentIndex + 1;
+        } else {
+            progressStatSpan.innerText = quizQuestions.length;
+        }
+        totalQSpan.innerText = quizQuestions.length;
+    }
+
+    function renderCurrentQuestion() {
+        if (quizFinished) {
+            renderResultScreen();
+            return;
+        }
+        if (currentIndex >= quizQuestions.length) {
+            completeQuiz();
+            return;
+        }
+
+        const q = quizQuestions[currentIndex];
+        const selectedIdx = answersRecord[currentIndex];
+        const isAnswered = (selectedIdx !== -1);
+        const disabledState = isAnswered || answerLockedPerQuestion;
+
+        const progressPercent = (currentIndex / quizQuestions.length) * 100;
+
+        let optionsHTML = '';
+        const letters = ['A', 'B', 'C', 'D'];
+        q.options.forEach((opt, idx) => {
+            let additionalClass = '';
+            if (isAnswered) {
+                if (idx === q.correct) {
+                    additionalClass = 'correct-answer';
+                } else if (idx === selectedIdx && idx !== q.correct) {
+                    additionalClass = 'wrong-answer';
+                } else {
+                    additionalClass = 'disabled-opt';
+                }
+            }
+            optionsHTML += `
+                <div class="opt-card ${additionalClass}" data-opt-index="${idx}">
+                    <div class="opt-marker">${letters[idx]}</div>
+                    <div>${escapeHtml(opt)}</div>
+                </div>
+            `;
+        });
+
+        const htmlContent = `
+            <div class="progress-area">
+                <div class="progress-track">
+                    <div class="progress-fill-dynamic" style="width: ${progressPercent}%;"></div>
+                </div>
+                <div class="q-counter">✨ Question ${currentIndex+1} of ${quizQuestions.length}</div>
+            </div>
+            <div class="question-text">${escapeHtml(q.question)}</div>
+            <div class="options-container" id="optionsContainer">
+                ${optionsHTML}
+            </div>
+            <div class="action-bar">
+                <button class="btn" id="prevBtn" ${currentIndex === 0 ? 'disabled' : ''}>◀ PREV</button>
+                <button class="btn btn-primary" id="nextBtn" ${!isAnswered ? 'disabled' : ''}>${currentIndex === quizQuestions.length-1 ? '🏁 FINISH' : 'NEXT ▶'}</button>
+                <button class="btn btn-danger" id="restartBtn">🔄 RESTART</button>
+            </div>
+        `;
+
+        dynamicBody.innerHTML = htmlContent;
+
+        // attach option click listeners (if not disabled)
+        const optionDivs = document.querySelectorAll('.opt-card');
+        optionDivs.forEach(div => {
+            if (!div.classList.contains('disabled-opt') && !isAnswered) {
+                div.addEventListener('click', (e) => {
+                    if (answerLockedPerQuestion || answersRecord[currentIndex] !== -1) return;
+                    const optIndex = parseInt(div.dataset.optIndex);
+                    handleAnswer(optIndex);
+                });
+            }
+        });
+
+        document.getElementById('prevBtn')?.addEventListener('click', goPrev);
+        document.getElementById('nextBtn')?.addEventListener('click', goNext);
+        document.getElementById('restartBtn')?.addEventListener('click', () => fullRestart());
+    }
+
+    function handleAnswer(optIndex) {
+        if (answerLockedPerQuestion) return;
+        const currentQ = quizQuestions[currentIndex];
+        const isCorrect = (optIndex === currentQ.correct);
+        if (isCorrect && answersRecord[currentIndex] === -1) {
+            userScore += 10;   // 10 points per correct
+            updateStatsUI();
+        }
+        answersRecord[currentIndex] = optIndex;
+        answerLockedPerQuestion = true;
+        // re-render to show visual feedback
+        renderCurrentQuestion();
+    }
+
+    function goPrev() {
+        if (quizFinished) return;
+        if (currentIndex > 0) {
+            currentIndex--;
+            answerLockedPerQuestion = false;  // unlock state for previous question (will be recalc based on answersRecord)
+            renderCurrentQuestion();
+            updateStatsUI();
+        }
+    }
+
+    function goNext() {
+        if (quizFinished) return;
+        // ensure current question answered
+        if (answersRecord[currentIndex] === -1) {
+            // gentle feedback: blink next
+            const nextBtn = document.getElementById('nextBtn');
+            if (nextBtn) {
+                nextBtn.style.transform = 'scale(0.96)';
+                setTimeout(() => { if(nextBtn) nextBtn.style.transform = ''; }, 200);
+            }
+            return;
+        }
+        if (currentIndex === quizQuestions.length - 1) {
+            completeQuiz();
+        } else {
+            currentIndex++;
+            answerLockedPerQuestion = false;
+            renderCurrentQuestion();
+            updateStatsUI();
+        }
+    }
+
+    function completeQuiz() {
+        quizFinished = true;
+        renderResultScreen();
+        updateStatsUI();
+    }
+
+    function renderResultScreen() {
+        const totalPoints = quizQuestions.length * 10;
+        const percentage = Math.round((userScore / totalPoints) * 100);
+        let rankMsg = "";
+        if (percentage >= 90) rankMsg = "🏆 NODE.JS MASTER — Absolute Legend! 🏆";
+        else if (percentage >= 70) rankMsg = "🔥 Full Stack Expert — Outstanding! 🔥";
+        else if (percentage >= 50) rankMsg = "📚 Good knowledge — sharpen a bit more! ✨";
+        else rankMsg = "🌱 Every expert started here. Restart and grow! 🚀";
+
+        const resultHTML = `
+            <div class="result-container">
+                <div class="result-score-ring">
+                    <div class="score-big">${userScore}<span style="font-size: 1.6rem;">/${totalPoints}</span></div>
+                </div>
+                <div class="verdict">${rankMsg}</div>
+                <div style="font-size: 1rem; background: rgba(255,255,245,0.1); display: inline-block; padding: 0.3rem 1.2rem; border-radius: 60px;">🎯 accuracy: ${percentage}%</div>
+                <div class="action-bar" style="justify-content: center; margin-top: 2rem;">
+                    <button class="btn btn-primary" id="playAgainBtn">🎮 PLAY AGAIN</button>
+                    <button class="btn btn-danger" id="forceRestartBtn">⟳ FULL RESET</button>
+                </div>
+                <hr />
+                <div style="font-size:0.8rem; padding-top: 0.5rem;">✔️ 20 pro questions • JS & Node.js core concepts</div>
+            </div>
+        `;
+        dynamicBody.innerHTML = resultHTML;
+        document.getElementById('playAgainBtn')?.addEventListener('click', () => fullRestart());
+        document.getElementById('forceRestartBtn')?.addEventListener('click', () => fullRestart());
+    }
+
+    function fullRestart() {
+        // reshuffle everything and reset state
+        quizQuestions = shuffleArray([...MASTER_QUIZ]);
+        currentIndex = 0;
+        userScore = 0;
+        answersRecord = new Array(quizQuestions.length).fill(-1);
+        quizFinished = false;
+        answerLockedPerQuestion = false;
+        updateStatsUI();
+        renderCurrentQuestion();
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // start the app
+    initGame();
+</script>
+</body>
+</html>
